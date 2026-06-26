@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ibm_capstone
+        working-directory: ibm_capstone/ibm_capstone
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: ibm_capstone/package-lock.json
+          cache-dependency-path: ibm_capstone/ibm_capstone/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-dist
-          path: ibm_capstone/dist
+          path: ibm_capstone/ibm_capstone/dist
           retention-days: 5
 
   # ============================================================
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ibm_capstone
+        working-directory: ibm_capstone/ibm_capstone
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,7 +71,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-dist
-          path: ibm_capstone/dist
+          path: ibm_capstone/ibm_capstone/dist
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
