@@ -1,0 +1,62 @@
+{
+  "compilerOptions": {
+
+    // JavaScript version to compile TO.
+    // ES2022 = class fields, async/await, optional chaining (?.),
+    // nullish coalescing (??), private members (#). UI5 1.120+ supports it.
+    "target": "ES2022",
+
+    // Module system of the OUTPUT — ECMAScript Modules (import/export).
+    // ui5-tooling-transpile rewrites these into UI5's sap.ui.define(...) format.
+    "module": "ES2022",
+
+    // How import paths resolve to real files.
+    // "bundler" reads package.json "exports" and matches the UI5 toolchain
+    // (and tools like vite/webpack). Modern recommended setting.
+    "moduleResolution": "bundler",
+
+    // Skip type-checking the .d.ts files in node_modules — faster builds,
+    // no noise from third-party type packages.
+    "skipLibCheck": true,
+
+    // Let .js and .ts files live together — essential for gradual migration.
+    // Once 100% TypeScript you may set this to false.
+    "allowJs": true,
+
+    // strict:false → we adopt strictness GRADUALLY via the flags below,
+    // instead of turning on every strict rule at once.
+    "strict": false,
+
+    // Every value must have a known type — no silent "any".
+    "noImplicitAny": true,
+
+    // When overriding a parent-class method you MUST write the 'override'
+    // keyword. Stops accidental name clashes with the UI5 base classes.
+    "noImplicitOverride": true,
+
+    // Allow @decorator syntax used by some advanced UI5 TS patterns.
+    "experimentalDecorators": true,
+
+    // Emit .js.map files so DevTools shows your original .ts when debugging.
+    "sourceMap": true,
+
+    // Built-in type libraries: ES2022 standard library + browser DOM
+    // (window, document, history…). DOM is needed e.g. for window.history.go().
+    "lib": ["ES2022", "DOM"],
+
+    // UI5 type-definitions package — provides every "sap/..." module declaration.
+    "types": ["@openui5/ts-types-esm"],
+
+    // Map the app namespace to its source folder (compile-time resolution only;
+    // at runtime UI5's loader resolves the real files).
+    "paths": {
+      "com/ats/manageorder/*": ["./webapp/*"]
+    }
+  },
+
+  // Compile everything under webapp/
+  "include": ["./webapp/**/*"],
+
+  // Ignore these during compilation
+  "exclude": ["node_modules", "dist", "**/*.d.ts"]
+}

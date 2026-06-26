@@ -1,0 +1,2 @@
+sap.ui.define([],function(){"use strict";function e(e){switch(e){case"A":return"Available";case"D":return"Discontinued";case"O":return"Out of Stock";default:return""}}function t(e){switch(e){case"A":return"Success";case"D":return"Error";case"O":return"Warning";default:return"None"}}var r={__esModule:true};r.getStatus=e;r.getStatusColor=t;return r});
+//# sourceMappingURL=formatter.js.map
