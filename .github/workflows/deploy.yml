@@ -1,0 +1,98 @@
+# .github/workflows/deploy.yml
+name: CI-CD to Cloud Foundry
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  # ============================================================
+  # JOB 1 — Quality gates: type-check, test, compile, save dist/
+  # ============================================================
+  build:
+    name: Type-check, Test & Compile
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: capm-s4-mashup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: capm-s4-mashup/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ───── GATE 1: TYPE CHECK (must be first) ─────
+      - name: TypeScript type-check (tsc --noEmit)
+        run: npx tsc --noEmit
+
+      # ───── GATE 2: UNIT TESTS (after type-check, before deploy) ─────
+      - name: Run unit tests (jest / ts-jest)
+        run: npx jest --ci
+
+      # ───── GATE 3: COMPILE to dist/ ─────
+      - name: Compile TypeScript to dist/
+        run: npx tsc --project tsconfig.build.json
+
+      # ───── PRESERVE dist/ BETWEEN JOBS ─────
+      - name: Upload dist/ artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: capm-s4-mashup/dist
+          retention-days: 5
+
+  # ============================================================
+  # JOB 2 — Deploy to Cloud Foundry (only after gates pass, only on main)
+  # ============================================================
+  deploy:
+    name: Deploy to BTP Cloud Foundry
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: capm-s4-mashup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dist/ artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: capm-s4-mashup/dist
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install CF CLI + MTA build tool
+        run: |
+          npm install -g mbt
+          curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&source=github" | tar -zx
+          sudo mv cf8 /usr/local/bin/cf || sudo mv cf /usr/local/bin/cf
+          cf install-plugin multiapps -f
+
+      - name: Build the MTA archive
+        run: mbt build
+
+      - name: Login to Cloud Foundry
+        run: |
+          cf api "${{ secrets.CF_API }}"
+          cf auth "${{ secrets.CF_USERNAME }}" "${{ secrets.CF_PASSWORD }}"
+          cf target -o "${{ secrets.CF_ORG }}" -s "${{ secrets.CF_SPACE }}"
+
+      - name: Deploy to Cloud Foundry
+        run: cf deploy mta_archives/*.mtar -f
